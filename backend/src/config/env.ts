@@ -16,5 +16,5 @@ export const env = {
   jwtSecret: required("JWT_SECRET", "dev-only-secret-change-me"),
   frontendOrigin: required("FRONTEND_ORIGIN", "http://localhost:3000"),
   geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-  geminiModel: process.env.GEMINI_MODEL ?? "gemini-3.6-flash",
+  geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-lite-latest",
 };
