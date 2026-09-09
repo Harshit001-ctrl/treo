@@ -55,9 +55,14 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
     },
   });
 
+  // The SDK has no default request timeout — an unresponsive connection would
+  // otherwise hang indefinitely with no error ever thrown, so nothing in
+  // rateLimiter's retry logic (which only fires on a rejection) would ever
+  // kick in. 30s comfortably covers a normal generation call; a call that
+  // hasn't returned by then is treated as retryable, same as a 429/503.
   const call = (promptText: string) =>
     enqueueLlmCall(async () => {
-      const result = await model.generateContent(promptText);
+      const result = await model.generateContent(promptText, { timeout: 30_000 });
       return result.response.text();
     });
 

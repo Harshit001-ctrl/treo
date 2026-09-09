@@ -21,7 +21,7 @@ function isRetryable(err: unknown): boolean {
   return (
     status === 429 ||
     (typeof status === "number" && status >= 500) ||
-    /rate.?limit|RESOURCE_EXHAUSTED|429|overloaded|UNAVAILABLE/i.test(message)
+    /rate.?limit|RESOURCE_EXHAUSTED|429|overloaded|UNAVAILABLE|timeout|timed out|ETIMEDOUT|ECONNRESET|aborted/i.test(message)
   );
 }
 

@@ -100,6 +100,24 @@ function extractLinks(html: string, base: URL): { url: URL; text: string }[] {
   return links;
 }
 
+/**
+ * Re-fetches a specific, already-known set of URLs (no link discovery/ranking)
+ * — used to regenerate the company brief from its original sources without
+ * re-running the full crawl. Best-effort: a page that fails this time round
+ * is just dropped rather than failing the whole regeneration.
+ */
+export async function refetchKnownPages(urls: string[]): Promise<CrawledPage[]> {
+  const pages: CrawledPage[] = [];
+  for (const url of urls) {
+    await sleep(CRAWL_DELAY_MS);
+    const result = await fetchLimited(url);
+    if (!result.ok) continue;
+    const clean = cleanPage(result.text);
+    pages.push({ url: result.finalUrl, title: clean.title, text: clean.text });
+  }
+  return pages;
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

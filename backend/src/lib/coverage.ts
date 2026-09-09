@@ -17,7 +17,10 @@ export function computeCoverage(requirements: Requirement[], questions: Question
   return { mustUncovered, niceUncovered };
 }
 
-function toCoverageField(requirements: Requirement[], check: GapCheck, passes: number, status: Coverage["status"], reason: Coverage["reason"]): Coverage {
+/** Exported for callers outside the coverage loop (e.g. server/regenerate.ts)
+ * that need to recompute the `coverage` field after a mutation without
+ * running a full generation pass. */
+export function toCoverageField(requirements: Requirement[], check: GapCheck, passes: number, status: Coverage["status"], reason: Coverage["reason"]): Coverage {
   const mustTotal = requirements.filter((r) => r.priority === "must").length;
   const niceTotal = requirements.filter((r) => r.priority === "nice").length;
   return {
@@ -28,6 +31,17 @@ function toCoverageField(requirements: Requirement[], check: GapCheck, passes: n
     must: { total: mustTotal, covered: mustTotal - check.mustUncovered.length, uncovered_ids: check.mustUncovered },
     nice: { total: niceTotal, covered: niceTotal - check.niceUncovered.length, uncovered_ids: check.niceUncovered },
   };
+}
+
+/** Recomputes the full `coverage` field from scratch — used after any mutation
+ * that changes `questions` outside the generation loop (a regenerate, an
+ * edit, an add, a delete), so `coverage` never goes stale relative to what's
+ * actually in the kit. */
+export function recomputeCoverageField(requirements: Requirement[], questions: Question[], passes: number): Coverage {
+  const check = computeCoverage(requirements, questions);
+  const status: Coverage["status"] = check.mustUncovered.length === 0 ? "complete" : "incomplete";
+  const reason: Coverage["reason"] = status === "complete" ? null : "max_passes_reached";
+  return toCoverageField(requirements, check, passes, status, reason);
 }
 
 const MAX_PASSES = 3;

@@ -172,6 +172,64 @@ export async function generateAllCategories(input: GenerateAllInput): Promise<Qu
 }
 
 /**
+ * Regenerates ONLY the untouched-by-a-human slots of one category. The
+ * caller (server/regenerate.ts) has already split that category's current
+ * questions into `locked` (user-authored or user-edited — survives, per
+ * Section 6) and the rest, which get discarded and replaced by this call.
+ * `locked` is passed back in as negative context so the model doesn't
+ * generate near-duplicates of what's being kept.
+ */
+export async function regenerateCategoryQuestions(
+  category: QuestionCategoryValue,
+  requirements: Requirement[],
+  companyBrief: CompanyBrief,
+  companyName: string,
+  lockedQuestions: Question[],
+  existingQuestionIds: string[]
+): Promise<Question[]> {
+  const config = CATEGORY_CONFIG.find((c) => c.category === category);
+  if (!config) throw new Error(`Unknown question category: ${category}`);
+
+  const knownIds = new Set(requirements.map((r) => r.id));
+  const relevant = config.relevantKinds
+    ? requirements.filter((r) => config.relevantKinds!.includes(r.kind))
+    : requirements.filter((r) => r.kind === "behavioural");
+
+  const lockedBlock = lockedQuestions.length
+    ? `These questions already exist in this category and must be kept as-is — do NOT generate duplicates or close variants of them:\n${lockedQuestions.map((q) => `- ${q.prompt}`).join("\n")}`
+    : "There are no existing questions to avoid duplicating.";
+
+  const prompt = [
+    config.instruction,
+    `Generate roughly ${targetCount(relevant.length)} NEW questions for this category.`,
+    lockedBlock,
+    "Requirements available to reference:",
+    JSON.stringify(relevant.map((r) => ({ id: r.id, text: r.text, priority: r.priority })), null, 2),
+    `Company: ${companyName}`,
+    `What they do: ${companyBrief.what_they_do || "(unknown)"}`,
+  ].join("\n\n");
+
+  const result = await generateStructured({
+    systemInstruction: BASE_SYSTEM_INSTRUCTION,
+    prompt,
+    geminiSchema: questionsArraySchema(false),
+    zodSchema: QuestionsResultSchema,
+  });
+
+  const ids = nextIds([...knownIds, ...existingQuestionIds], "q", result.questions.length);
+  return result.questions.map((draft, i) => ({
+    id: ids[i],
+    requirement_ids: sanitizeRequirementIds(draft.requirement_ids, knownIds),
+    category,
+    prompt: draft.prompt,
+    answer_outline: draft.answer_outline,
+    difficulty: draft.difficulty,
+    origin: "ai" as const,
+    edited: false,
+  }));
+}
+
+/**
  * The coverage loop's gap-fill step (Section 4): one batched call covering
  * every currently-uncovered must-have requirement at once, rather than one
  * call per requirement — the direct answer to the free-tier rate-limit

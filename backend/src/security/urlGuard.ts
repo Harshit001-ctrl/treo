@@ -1,7 +1,9 @@
 import dns from "node:dns/promises";
 import { env } from "../config/env";
-import { badRequest, forbidden } from "../lib/httpError";
+import { badRequest, HttpError } from "../lib/httpError";
 import { ErrorCode } from "@prepkit/shared";
+
+const blocked = (message: string) => new HttpError(403, ErrorCode.COMPANY_URL_BLOCKED, message);
 
 /**
  * The app fetches company URLs supplied by an untrusted user, which is a
@@ -53,7 +55,7 @@ export async function assertPublicHttpUrl(rawUrl: string): Promise<URL> {
 
   const hostname = url.hostname;
   if (hostname === "localhost" || hostname === "0.0.0.0") {
-    throw forbidden("Local addresses are not permitted for company URLs.");
+    throw blocked("Local addresses are not permitted for company URLs.");
   }
 
   let addresses: string[];
@@ -66,7 +68,7 @@ export async function assertPublicHttpUrl(rawUrl: string): Promise<URL> {
 
   for (const addr of addresses) {
     if (isPrivateIPv4(addr) || isPrivateIPv6(addr)) {
-      throw forbidden("Company URL resolves to a private or loopback address, which is not permitted.");
+      throw blocked("Company URL resolves to a private or loopback address, which is not permitted.");
     }
   }
 

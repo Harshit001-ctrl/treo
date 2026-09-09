@@ -38,7 +38,8 @@ Rules:
 export async function generateFlashcards(
   requirements: Requirement[],
   companyBrief: CompanyBrief,
-  companyName: string
+  companyName: string,
+  existingIds: string[] = []
 ): Promise<Flashcard[]> {
   const mustCount = requirements.filter((r) => r.priority === "must").length;
   const targetCount = Math.min(12, Math.max(3, mustCount + 2));
@@ -58,7 +59,7 @@ export async function generateFlashcards(
   });
 
   const knownIds = new Set(requirements.map((r) => r.id));
-  const ids = nextIds([], "f", result.flashcards.length);
+  const ids = nextIds(existingIds, "f", result.flashcards.length);
   return result.flashcards.map((draft, i) => ({
     id: ids[i],
     front: draft.front,

@@ -51,7 +51,8 @@ authRouter.post(
 );
 
 authRouter.post("/logout", (_req, res) => {
-  res.clearCookie(SESSION_COOKIE, sessionCookieOptions());
+  const { maxAge: _maxAge, ...clearOptions } = sessionCookieOptions();
+  res.clearCookie(SESSION_COOKIE, clearOptions);
   res.status(204).end();
 });
 

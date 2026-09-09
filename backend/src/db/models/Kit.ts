@@ -1,4 +1,5 @@
 import { Schema, model, InferSchemaType, Types } from "mongoose";
+import { KIT_STATUSES } from "../../pipeline/status";
 
 /**
  * The generated kit content (Appendix A shape + our origin/edited extensions)
@@ -8,19 +9,11 @@ import { Schema, model, InferSchemaType, Types } from "mongoose";
  * lib/validateKit.ts) before persisting, per the brief's "validate a
  * generated kit against the expected structure before saving it." Mongoose's
  * own schema below only models what Mongo/the app actually needs to query on.
+ *
+ * KIT_STATUSES lives in pipeline/status.ts, not here — the pipeline owns what
+ * its stages are; this model just persists whichever one a kit is currently in.
  */
-
-export const KIT_STATUSES = [
-  "queued",
-  "researching",
-  "extracting",
-  "generating_questions",
-  "checking_coverage",
-  "scheduling",
-  "ready",
-  "failed",
-] as const;
-export type KitStatus = (typeof KIT_STATUSES)[number];
+export { KIT_STATUSES };
 
 const progressEntrySchema = new Schema(
   {
