@@ -1,7 +1,7 @@
 import type { Kit, Question, Flashcard } from "@prepkit/shared";
 import type { QuestionCategory } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = "";
 
 export class ApiError extends Error {
   code: string;
