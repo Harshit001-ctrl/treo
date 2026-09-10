@@ -4,6 +4,8 @@ const BACKEND_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@prepkit/shared"],
+  // Don't auto-generate AGENTS.md/CLAUDE.md files on every build.
+  agentRules: false,
 
   // Proxy /api/* through the frontend's own origin instead of the browser
   // calling the Render backend cross-site directly. The session cookie only
