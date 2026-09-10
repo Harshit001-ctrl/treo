@@ -1,4 +1,4 @@
-import { Flashcard, Kit, Question, QuestionCategory as QuestionCategorySchema, nextIds } from "@prepkit/shared";
+import { CompanyBrief, Flashcard, Kit, Question, QuestionCategory as QuestionCategorySchema, nextIds } from "@prepkit/shared";
 import { z } from "zod";
 import { regenerateCategoryQuestions } from "../pipeline/generateQuestions";
 import { generateCompanyBrief } from "../pipeline/companyBrief";
@@ -63,6 +63,13 @@ export async function regenerateQuestionCategory(kit: Kit, category: QuestionCat
  * different situation from a category regen silently overwriting questions
  * the user never touched. Re-fetches the brief's own original sources
  * (no re-discovery crawl) so the new brief still reflects real page content.
+ *
+ * Note this deliberately discards any prior inline edit (`editCompanyBrief`)
+ * — a user who explicitly asks to regenerate this section is asking for a
+ * full replace of it, same as regenerating a question category with zero
+ * locked items would also fully replace it. Do not "fix" this into a
+ * lock-and-preserve scheme; that would be inconsistent with the doc comment
+ * above and is not what full-replace regeneration means here.
  */
 export async function regenerateCompanyBrief(kit: Kit): Promise<Kit> {
   const pages = await refetchKnownPages(kit.source.pages_used);
@@ -71,6 +78,17 @@ export async function regenerateCompanyBrief(kit: Kit): Promise<Kit> {
     companyName: kit.source.company,
     pages,
   });
+  return { ...kit, company_brief };
+}
+
+/**
+ * Inline edit to the brief (Section 6). Unlike questions/flashcards there's
+ * always exactly one brief, so there's no id to look up and no not-found
+ * case — just merge the provided fields and mark it user-touched, matching
+ * `editFlashcard`/`editQuestion`.
+ */
+export function editCompanyBrief(kit: Kit, updates: Partial<Pick<CompanyBrief, "summary" | "what_they_do">>): Kit {
+  const company_brief: CompanyBrief = { ...kit.company_brief, ...updates, edited: true };
   return { ...kit, company_brief };
 }
 

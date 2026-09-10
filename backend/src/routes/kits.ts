@@ -243,6 +243,25 @@ kitsRouter.delete(
   })
 );
 
+const editBriefSchema = z.object({
+  summary: z.string().min(1).optional(),
+  what_they_do: z.string().min(1).optional(),
+});
+
+kitsRouter.patch(
+  "/:id/brief",
+  asyncHandler(async (req, res) => {
+    const doc = await getOwnedKitDoc(req.userId!, req.params.id);
+    const kit = requireReadyKit(doc);
+    const updates = editBriefSchema.parse(req.body);
+    const updated = regenerate.editCompanyBrief(kit, updates);
+    doc.kit = assertValidKit(updated);
+    doc.markModified("kit");
+    await doc.save();
+    res.json({ kit: doc.kit });
+  })
+);
+
 // --- Regenerate -----------------------------------------------------------
 
 const regenerateSchema = z.object({

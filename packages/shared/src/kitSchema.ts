@@ -114,6 +114,11 @@ export const CompanyBriefSchema = z.object({
   summary: z.string(),
   what_they_do: z.string(),
   sources: z.array(z.string()),
+  // extensions: same origin/edited pair as Question/Flashcard above, so an
+  // inline edit to the brief (Section 6) is distinguishable from the AI's
+  // own output the same way it is everywhere else.
+  origin: ItemOrigin.default("ai"),
+  edited: z.boolean().default(false),
 });
 export type CompanyBrief = z.infer<typeof CompanyBriefSchema>;
 

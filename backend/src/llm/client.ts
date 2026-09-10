@@ -10,7 +10,7 @@ let client: GoogleGenerativeAI | null = null;
 function getClient(): GoogleGenerativeAI {
   if (!env.geminiApiKey) {
     throw new Error(
-      "GEMINI_API_KEY is not set. Copy backend/.env.example to backend/.env and add a free-tier key from https://aistudio.google.com/apikey"
+      "GEMINI_API_KEY is not set"
     );
   }
   if (!client) client = new GoogleGenerativeAI(env.geminiApiKey);
@@ -24,25 +24,13 @@ export class LlmOutputError extends Error {
 }
 
 interface GenerateStructuredOptions<T> {
-  /** Short instruction fixing the model's role/tone for this call. */
   systemInstruction: string;
-  /** The user-turn content, including any untrusted fetched/pasted text —
-   * callers are responsible for wrapping untrusted spans (see
-   * llm/prompts/untrusted.ts) before it reaches here. */
   prompt: string;
-  /** Gemini's own JSON-schema dialect, used for responseSchema / strict JSON mode. */
   geminiSchema: GeminiSchema;
-  /** Re-validated independently of Gemini's own schema enforcement — a model
-   * can still return a structurally-valid-but-wrong-shaped JSON document. */
   zodSchema: ZodSchema<T>;
 }
 
 /**
- * Calls Gemini with JSON-mode structured output, validates the result against
- * `zodSchema`, and makes exactly one repair attempt (re-prompting the model
- * with its own broken output and the validation error) before giving up with
- * an LlmOutputError. This is the direct answer to the brief's "the model
- * returns invalid JSON or an incomplete kit" edge case.
  */
 export async function generateStructured<T>(opts: GenerateStructuredOptions<T>): Promise<T> {
   const model = getClient().getGenerativeModel({
@@ -55,11 +43,6 @@ export async function generateStructured<T>(opts: GenerateStructuredOptions<T>):
     },
   });
 
-  // The SDK has no default request timeout — an unresponsive connection would
-  // otherwise hang indefinitely with no error ever thrown, so nothing in
-  // rateLimiter's retry logic (which only fires on a rejection) would ever
-  // kick in. 30s comfortably covers a normal generation call; a call that
-  // hasn't returned by then is treated as retryable, same as a 429/503.
   const call = (promptText: string) =>
     enqueueLlmCall(async () => {
       const result = await model.generateContent(promptText, { timeout: 30_000 });

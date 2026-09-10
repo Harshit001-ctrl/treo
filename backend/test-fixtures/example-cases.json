@@ -1,0 +1,14 @@
+[
+  {
+    "id": "case-01",
+    "jd": "Senior Backend Engineer\n\nWe are looking for a Senior Backend Engineer to join our platform team.\n\nResponsibilities:\n- Design and build scalable APIs and services\n- Mentor junior engineers and review their code\n- Own reliability and on-call for critical systems\n\nRequirements:\n- 5+ years of experience with Node.js or a similar backend stack\n- Strong understanding of distributed systems and databases\n- Experience mentoring or leading other engineers\n\nBonus points for:\n- Experience with Kubernetes\n- Contributions to open source projects",
+    "company_url": "https://about.gitlab.com/",
+    "days": 5
+  },
+  {
+    "id": "case-02",
+    "jd": "Frontend Engineer.",
+    "company_url": "https://posthog.com/",
+    "days": 3
+  }
+]

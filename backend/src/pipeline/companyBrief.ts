@@ -43,6 +43,8 @@ export async function generateCompanyBrief(input: CompanyBriefInput): Promise<Co
       summary: `We could not retrieve any information about ${input.companyName || input.companyUrl}. The company site may be unreachable, blocking automated access, or the URL may be incorrect.`,
       what_they_do: "",
       sources: [],
+      origin: "ai",
+      edited: false,
     };
   }
 
@@ -67,5 +69,7 @@ export async function generateCompanyBrief(input: CompanyBriefInput): Promise<Co
     summary: result.summary,
     what_they_do: result.what_they_do,
     sources: input.pages.map((p) => p.url),
+    origin: "ai",
+    edited: false,
   };
 }

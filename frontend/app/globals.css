@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -16,6 +17,11 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* Without this, the browser renders native controls (select popups,
+       scrollbars) in light mode regardless of our dark page styling — that's
+       what made dropdown options look washed out/illegible against the
+       dark theme. */
+    color-scheme: dark;
   }
 }
 

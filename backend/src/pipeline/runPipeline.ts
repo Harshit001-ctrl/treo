@@ -49,7 +49,7 @@ export async function runPipeline(input: PipelineCaseInput, onProgress?: Progres
     onProgress?.({ status, message });
 
   report("extracting", "Extracting requirements from the job description...");
-  const requirements = await extractRequirements(input.jd);
+  const { requirements, seniority, responsibilities } = await extractRequirements(input.jd);
 
   report("researching", "Crawling the company site...");
   const crawl = await crawlCompanySite(input.companyUrl); // throws on invalid/SSRF-blocked URL — a hard case failure, not an honest-empty-result
@@ -96,8 +96,8 @@ export async function runPipeline(input: PipelineCaseInput, onProgress?: Progres
     company_brief: companyBrief,
     role: {
       title: deriveRoleTitle(input.jd),
-      seniority: "",
-      responsibilities: [],
+      seniority,
+      responsibilities,
       requirements,
     },
     questions,
